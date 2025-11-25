@@ -5,3 +5,34 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+env:
+  # Stripe Configuration (Secrets)
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET
+
+  # Firebase Admin Configuration (Secrets)
+  - variable: FIREBASE_ADMIN_PRIVATE_KEY
+    secret: FIREBASE_ADMIN_PRIVATE_KEY
+  - variable: FIREBASE_ADMIN_CLIENT_EMAIL
+    secret: FIREBASE_ADMIN_CLIENT_EMAIL
+
+  # Public Environment Variables
+  - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    value: pk_live_pk_live_51RvhTiLuFbK8pinaAI8BTLNKYmqTEGWzyy4pqeOIVtqqQ053Q0r4RW67TItObwYQSp8aUR3bxST6qpcbwMdPX9ad00P31vtvGx
+  - variable: NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID
+    value: price_1SVHOhLuFbK8pina1pIkREAN
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://production--studio-5047433083-b9a80.us-central1.hosted.app
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: studio-5047433083-b9a80
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAqDNNA2WL5Z0nAG3_YaveK7G18kPOmdN0
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: studio-5047433083-b9a80.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:314150598564:web:f50cf8f4f4b6078769b331"
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "314150598564"
