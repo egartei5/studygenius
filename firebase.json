@@ -1,0 +1,20 @@
+{
+  "hosting": {
+    "site": "studio-5047433083-b9a80",
+    "public": ".next",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "ssrstudio5047433083b9a8"
+      }
+    ]
+  },
+  "frameworksBackend": {
+    "region": "us-central1"
+  }
+}

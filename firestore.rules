@@ -1,0 +1,122 @@
+/**
+ * @fileoverview Firestore Security Rules for VitalPrep application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user has sole access to their profile data,
+ * statistics, and preferences stored under their respective `/users/{userId}` path.
+ *
+ * Data Structure:
+ * All data is nested under `/users/{userId}`, ensuring clear ownership and simplified access control.
+ *  - `/users/{userId}`: Stores user profile information (name, email, subscription status, etc.).
+ *  - `/users/{userId}/stats`: Stores user statistics (sets generated, questions answered, etc.).
+ *  - `/users/{userId}/preferences`: Stores user preferences (last topic, dark mode, etc.).
+ *
+ * Key Security Decisions:
+ * - Users can only access their own data. Listing all users is disallowed.
+ * - Authorization Independence is achieved by denormalizing authorization data directly into the documents.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to user profile information.
+     * @path /users/{userId}
+     * @allow (create) - User with UID 'user123' can create their own profile.
+     *   request.auth.uid == 'user123' && request.resource.data.id == 'user123'
+     * @allow (get, update, delete) - User with UID 'user123' can read/update/delete their own profile.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create a profile for 'user123'.
+     *   request.auth.uid == 'user456' && request.resource.data.id == 'user123'
+     * @deny (get, update, delete) - User with UID 'user456' cannot access 'user123' profile.
+     *   request.auth.uid == 'user456'
+     * @principle Enforces document ownership and prevents unauthorized access to user profiles.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isSelfCreation(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to user statistics.
+     * @path /users/{userId}/stats
+     * @allow (create) - User with UID 'user123' can create their own stats.
+     *   request.auth.uid == 'user123' && request.resource.data.userId == 'user123'
+     * @allow (get, update, delete) - User with UID 'user123' can read/update/delete their own stats.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create stats for 'user123'.
+     *   request.auth.uid == 'user456' && request.resource.data.userId == 'user123'
+     * @deny (get, update, delete) - User with UID 'user456' cannot access 'user123' stats.
+     *   request.auth.uid == 'user456'
+     * @principle Enforces document ownership and prevents unauthorized access to user statistics.
+     */
+    match /users/{userId}/stats {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to user preferences.
+     * @path /users/{userId}/preferences
+     * @allow (create) - User with UID 'user123' can create their own preferences.
+     *   request.auth.uid == 'user123' && request.resource.data.userId == 'user123'
+     * @allow (get, update, delete) - User with UID 'user123' can read/update/delete their own preferences.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create preferences for 'user123'.
+     *   request.auth.uid == 'user456' && request.resource.data.userId == 'user123'
+     * @deny (get, update, delete) - User with UID 'user456' cannot access 'user123' preferences.
+     *   request.auth.uid == 'user456'
+     * @principle Enforces document ownership and prevents unauthorized access to user preferences.
+     */
+    match /users/{userId}/preferences {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // --- Helper Functions ---
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the owner of the resource.
+     * @param {string} userId The user ID from the path.
+     * @return {boolean} True if the user is the owner, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is creating their own user document.
+     * @param {string} userId The user ID from the path.
+     * @return {boolean} True if the user is creating their own document, false otherwise.
+     */
+    function isSelfCreation(userId) {
+        return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the owner of the resource and the resource exists.
+     * @param {string} userId The user ID from the path.
+     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+  }
+}
